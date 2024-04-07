@@ -4,12 +4,14 @@ import java_spring.lesson_3.model.Book;
 import java_spring.lesson_3.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Slf4j
-@RestController
+@Controller
 @RequestMapping("/books")
 public class BookController {
 
@@ -37,4 +39,13 @@ public class BookController {
         bookRepository.deleteBook(id);
         return deletedBook;
     }
+
+    @GetMapping
+    public String books(Model model) {
+        List<Book> books = bookRepository.getAll().stream()
+                .filter(Book::isFree).toList();
+        model.addAttribute("books", books);
+        return "books";
+    }
+
 }

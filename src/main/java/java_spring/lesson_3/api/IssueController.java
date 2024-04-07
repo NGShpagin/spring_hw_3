@@ -2,6 +2,7 @@ package java_spring.lesson_3.api;
 
 import java_spring.lesson_3.model.Book;
 import java_spring.lesson_3.model.Issue;
+import java_spring.lesson_3.model.Reader;
 import java_spring.lesson_3.repository.BookRepository;
 import java_spring.lesson_3.repository.IssueRepository;
 import java_spring.lesson_3.repository.ReaderRepository;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.management.AttributeNotFoundException;
@@ -17,7 +20,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @Slf4j
-@RestController
+@Controller
 @RequestMapping("/issues")
 public class IssueController {
 
@@ -26,6 +29,9 @@ public class IssueController {
 
     @Autowired
     private IssueRepository issueRepository;
+
+    @Autowired
+    private ReaderRepository readerRepository;
 
     @Autowired
     private BookRepository bookRepository;
@@ -64,5 +70,14 @@ public class IssueController {
         bookRepository.getBookById(issue.getBookId()).setFree(true);
         issueRepository.returnBook(issue);
         return issue;
+    }
+
+    @GetMapping
+    public String issues(Model model) {
+        List<Issue> issues = issueRepository.getAll();
+        model.addAttribute("issues", issues);
+        model.addAttribute("books", bookRepository);
+        model.addAttribute("readers", readerRepository);
+        return "issues";
     }
 }

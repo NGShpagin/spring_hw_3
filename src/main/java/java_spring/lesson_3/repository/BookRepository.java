@@ -25,7 +25,9 @@ public class BookRepository {
                 new Book("Война и мир"),
                 new Book("Чистый код"),
                 new Book("Мертвые души"),
-                new Book("newBook")
+                new Book("newBook1"),
+                new Book("newBook2"),
+                new Book("newBook3")
         ));
     }
 
