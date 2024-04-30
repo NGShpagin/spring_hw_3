@@ -1,10 +1,10 @@
 package java_spring.lesson_3.api;
 
-import java_spring.lesson_3.model.Book;
 import java_spring.lesson_3.model.Issue;
 import java_spring.lesson_3.model.Reader;
-import java_spring.lesson_3.repository.BookRepository;
-import java_spring.lesson_3.repository.ReaderRepository;
+import java_spring.lesson_3.repository.BookRep;
+import java_spring.lesson_3.repository.IssueRep;
+import java_spring.lesson_3.repository.ReaderRep;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,50 +22,49 @@ import java.util.Optional;
 public class ReaderController {
 
     @Autowired
-    ReaderRepository readerRepository;
-
+    ReaderRep readerRepository;
     @Autowired
-    BookRepository bookRepository;
+    IssueRep issueRepository;
 
     @GetMapping
     public ResponseEntity<List<Reader>> getAll() {
-        return ResponseEntity.status(HttpStatus.OK).body(readerRepository.getAll());
+        return ResponseEntity.status(HttpStatus.OK).body(readerRepository.findAll());
     }
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Object> getReaderById(@PathVariable long id) {
-        if (readerRepository.getReaderById(id).isPresent())
-            return ResponseEntity.status(HttpStatus.FOUND).body(readerRepository.getReaderById(id));
+        Optional<Reader> reader = readerRepository.findById(id);
+        if (reader.isPresent()) return ResponseEntity.status(HttpStatus.FOUND).body(reader);
         else return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @PostMapping
     public ResponseEntity<Object> createReader(@RequestBody Reader reader) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(readerRepository.createReader(reader.getName()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(readerRepository.save(reader));
     }
 
     @DeleteMapping(path = "{id}")
     public ResponseEntity<Object> deleteReaderById(@PathVariable long id) {
-        if (readerRepository.getReaderById(id).isPresent()) {
-            Reader deletedReader = readerRepository.getReaderById(id).orElseThrow();
-            readerRepository.deleteReader(id);
-            return ResponseEntity.status(HttpStatus.OK).body(deletedReader);
+        Optional<Reader> reader = readerRepository.findById(id);
+        if (reader.isPresent()) {
+            readerRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(reader);
         } else return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @GetMapping(path = "/{id}/issues")
-    public ResponseEntity<List<Issue>> getReaderIssues(@PathVariable long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(readerRepository.getReaderIssues(id));
+    public ResponseEntity<List<Issue>> getReaderAllIssues(@PathVariable long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(issueRepository.findAllByReaderId(id));
     }
 
     @GetMapping(path = "/{id}/books")
-    public ResponseEntity<List<Issue>> getReaderBooks(@PathVariable long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(readerRepository.getReaderBooks(id));
+    public ResponseEntity<List<Issue>> getReaderActiveIssues(@PathVariable long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(issueRepository.findActiveByReaderId(id));
     }
 
     @GetMapping(path = "/ui/all")
     public String readers(Model model) {
-        List<Reader> readers = readerRepository.getAll();
+        List<Reader> readers = readerRepository.findAll();
         model.addAttribute("readers", readers);
         return "readers";
     }

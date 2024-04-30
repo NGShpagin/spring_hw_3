@@ -1,10 +1,9 @@
 package java_spring.lesson_3.api;
 
-import java_spring.lesson_3.model.Book;
 import java_spring.lesson_3.model.Issue;
-import java_spring.lesson_3.repository.BookRepository;
-import java_spring.lesson_3.repository.IssueRepository;
-import java_spring.lesson_3.repository.ReaderRepository;
+import java_spring.lesson_3.repository.BookRep;
+import java_spring.lesson_3.repository.IssueRep;
+import java_spring.lesson_3.repository.ReaderRep;
 import java_spring.lesson_3.service.IssueService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +24,12 @@ public class IssueController {
 
     @Autowired
     private IssueService issueService;
-
     @Autowired
-    private IssueRepository issueRepository;
-
+    private IssueRep issueRepository;
     @Autowired
-    private ReaderRepository readerRepository;
-
+    private ReaderRep readerRepository;
     @Autowired
-    private BookRepository bookRepository;
+    private BookRep bookRepository;
 
     // GET /issue/{id}
 
@@ -52,22 +48,23 @@ public class IssueController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Object> getIssueById(@PathVariable long id) {
-        if (issueRepository.getIssueById(id).isPresent())
-            return ResponseEntity.status(HttpStatus.FOUND).body(issueRepository.getIssueById(id));
+        Optional<Issue> issue = issueRepository.findById(id);
+        if (issue.isPresent())
+            return ResponseEntity.status(HttpStatus.FOUND).body(issue);
         else return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @GetMapping
     public ResponseEntity<List<Issue>> getAll() {
-        return ResponseEntity.status(HttpStatus.OK).body(issueRepository.getAll());
+        return ResponseEntity.status(HttpStatus.OK).body(issueRepository.findAll());
     }
 
     @PutMapping(path = "/{id}")
     public ResponseEntity<Object> returnBook(@PathVariable long id) {
         final Issue issue;
         try {
-            issue = issueRepository.getIssueById(id).orElseThrow();
-            issueRepository.returnBook(issue);
+            issue = issueRepository.findById(id).orElseThrow();
+            issueService.returnBook(issue);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
@@ -76,7 +73,7 @@ public class IssueController {
 
     @GetMapping(path = "/ui/all")
     public String issues(Model model) {
-        List<Issue> issues = issueRepository.getAll();
+        List<Issue> issues = issueRepository.findAll();
         model.addAttribute("issues", issues);
         model.addAttribute("books", bookRepository);
         model.addAttribute("readers", readerRepository);

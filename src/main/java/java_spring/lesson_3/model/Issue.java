@@ -1,13 +1,10 @@
 package java_spring.lesson_3.model;
 
 import jakarta.persistence.*;
-import java_spring.lesson_3.repository.BookRepository;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * Запись о факте выдачи книги
