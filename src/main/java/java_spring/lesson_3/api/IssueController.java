@@ -2,7 +2,6 @@ package java_spring.lesson_3.api;
 
 import java_spring.lesson_3.model.Book;
 import java_spring.lesson_3.model.Issue;
-import java_spring.lesson_3.model.Reader;
 import java_spring.lesson_3.repository.BookRepository;
 import java_spring.lesson_3.repository.IssueRepository;
 import java_spring.lesson_3.repository.ReaderRepository;
@@ -15,9 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import javax.management.AttributeNotFoundException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Controller
@@ -47,32 +46,35 @@ public class IssueController {
             issue = issueService.issue(request);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
-        } catch (ExceptionInInitializerError e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-
         return ResponseEntity.status(HttpStatus.CREATED).body(issue);
     }
 
     @GetMapping(path = "/{id}")
-    public Issue getIssueById(@PathVariable long id) {
-        return issueRepository.getIssueById(id);
-    }
-
-    @GetMapping(path = "/all")
-    public List<Issue> getAll() {
-        return issueRepository.getAll();
-    }
-
-    @PutMapping(path = "/{id}")
-    public Issue returnBook(@PathVariable long id) {
-        Issue issue = issueRepository.getIssueById(id);
-        bookRepository.getBookById(issue.getBookId()).setFree(true);
-        issueRepository.returnBook(issue);
-        return issue;
+    public ResponseEntity<Object> getIssueById(@PathVariable long id) {
+        if (issueRepository.getIssueById(id).isPresent())
+            return ResponseEntity.status(HttpStatus.FOUND).body(issueRepository.getIssueById(id));
+        else return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @GetMapping
+    public ResponseEntity<List<Issue>> getAll() {
+        return ResponseEntity.status(HttpStatus.OK).body(issueRepository.getAll());
+    }
+
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<Object> returnBook(@PathVariable long id) {
+        final Issue issue;
+        try {
+            issue = issueRepository.getIssueById(id).orElseThrow();
+            issueRepository.returnBook(issue);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(issue);
+    }
+
+    @GetMapping(path = "/ui/all")
     public String issues(Model model) {
         List<Issue> issues = issueRepository.getAll();
         model.addAttribute("issues", issues);

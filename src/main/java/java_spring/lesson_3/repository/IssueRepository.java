@@ -7,48 +7,59 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 @Repository
 public class IssueRepository {
-
-    private final List<Issue> issues;
+    private final IssueRep issueRepository;
 
     @Autowired
-    private BookRepository bookRepository;
+    private BookRep bookRepository;
 
-    @PostConstruct
-    public void generateData() {
-        issues.addAll(List.of(
-                new Issue(1, 1),
-                new Issue(2, 2),
-                new Issue(3, 1)
-        ));
-        issues.forEach(issue -> bookRepository.getBookById(issue.getBookId()).setFree(false));
+    @Autowired
+    private ReaderRep readerRepository;
+
+    @Autowired
+    public IssueRepository(IssueRep issueRepository) {
+        this.issueRepository = issueRepository;
     }
 
-    public IssueRepository(List<Issue> issues) {
-        this.issues = new ArrayList<>();
-    }
+//    @PostConstruct
+//    public void generateData() {
+//        issueRepository.saveAll(List.of(
+//                new Issue(bookRepository.findById(1L).orElseThrow(), readerRepository.findById(3L).orElseThrow()),
+//                new Issue(bookRepository.findById(2L).orElseThrow(), readerRepository.findById(2L).orElseThrow()),
+//                new Issue(bookRepository.findById(3L).orElseThrow(), readerRepository.findById(1L).orElseThrow())
+//        ));
+////        issues.forEach(issue -> bookRepository.getBookById(issue.getBookId()).setFree(false));
+//    }
 
     public void save(Issue issue) {
-        issues.add(issue);
+        issueRepository.save(issue);
     }
 
     public void returnBook(Issue issue) {
-        issue.setReturned_at(LocalDateTime.now());
+        Optional<Book> book = bookRepository.findById(issue.getBook().getId());
+        book.ifPresent(value -> {
+            value.setFree(true);
+            issue.setReturned_at(LocalDateTime.now());
+            bookRepository.save(value);
+            issueRepository.save(issue);
+        });
     }
 
-    public Issue getIssueById(long id) {
-        return issues.stream()
-                .filter(issue -> Objects.equals(issue.getId(), id))
-                .findFirst()
-                .orElse(null);
+    public Optional<Issue> getIssueById(long id) {
+        return issueRepository.findById(id);
     }
 
     public List<Issue> getAll() {
-        return List.copyOf(issues);
+        return issueRepository.findAll();
+    }
+
+    public List<Issue> getAllByReader(Long id) {
+        return issueRepository.findAll().stream()
+                .filter(issue -> issue.getReader().equals(readerRepository.findById(id).orElseThrow()))
+                .toList();
     }
 }

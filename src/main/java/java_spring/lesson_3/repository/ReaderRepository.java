@@ -7,56 +7,55 @@ import java_spring.lesson_3.model.Reader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Repository
 public class ReaderRepository {
-
-    private final List<Reader> readers;
+    private final ReaderRep readerRepository;
 
     @Autowired
     private IssueRepository issueRepository;
 
-    public ReaderRepository(List<Reader> readers) {
-        this.readers = new ArrayList<>();
+    @Autowired
+    private BookRepository bookRepository;
+
+    public ReaderRepository(ReaderRep readerRepository) {
+        this.readerRepository = readerRepository;
     }
 
-    @PostConstruct
-    public void generateData() {
-        readers.addAll(List.of(
-                new Reader("Игорь"),
-                new Reader("Николай"),
-                new Reader("Василий")
-        ));
-    }
+//    @PostConstruct
+//    public void generateData() {
+//        readerRepository.saveAll(List.of(
+//                new Reader("Игорь"),
+//                new Reader("Николай"),
+//                new Reader("Василий")
+//        ));
+//    }
 
-    public Reader getReaderById(long id) {
-        return readers.stream()
-                .filter(book -> Objects.equals(book.getId(), id))
-                .findFirst()
-                .orElse(null);
+    public Optional<Reader> getReaderById(long id) {
+        return readerRepository.findById(id);
     }
 
     public List<Reader> getAll() {
-        return List.copyOf(readers);
+        return readerRepository.findAll();
     }
 
     public Reader createReader(String name) {
-        Reader newReader = new Reader(name);
-        readers.add(newReader);
-        return newReader;
+        return readerRepository.save(new Reader(name));
     }
 
     public void deleteReader(long id) {
-        readers.remove(getReaderById(id));
+        readerRepository.deleteById(id);
     }
 
-    public List<Issue> getReaderIssues(long id) {
-        return issueRepository.getAll().stream()
-                .filter(issue -> Objects.equals(issue.getReaderId(), id))
+    public List<Issue> getReaderIssues(Long id) {
+        return issueRepository.getAllByReader(id);
+    }
+
+    public List<Issue> getReaderBooks(Long id) {
+        return issueRepository.getAllByReader(id).stream()
                 .filter(issue -> issue.getReturned_at() == null)
                 .toList();
     }
