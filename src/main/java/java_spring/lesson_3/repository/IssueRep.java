@@ -15,10 +15,4 @@ public interface IssueRep extends JpaRepository<Issue, Long> {
 
     @Query(value = "SELECT COUNT(*) FROM issues i WHERE i.reader_id = :id AND i.returned_at IS NULL", nativeQuery = true)
     int countActiveBooks(long id);
-
-//    public List<Issue> getAllByReader(Long id) {
-//        return issueRepository.findAll().stream()
-//                .filter(issue -> issue.getReader().equals(readerRepository.findById(id).orElseThrow()))
-//                .toList();
-//    }
 }
